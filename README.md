@@ -1,132 +1,61 @@
-# Cipher-Kernel-Module
+## 🔐 CIPHER KERNEL MODULE (RC4 ENCRYPTION)
+Linux Kernel | RC4 Cipher | Character Device | Proc Interface                                                         
+A kernel module implementing RC4 encryption/decryption 
+with dual interface (character device + proc filesystem).
 
-This is a Linux Kernel Module that implements a **cipher device** using the **RC4 encryption algorithm**. The module allows users to encrypt and decrypt messages using a key, and provides access to these functionalities through both a **character device** and `/proc` files.
+## 🚀 KEY FEATURES
 
-## Features
-* RC4 Encryption/Decryption: Implements the RC4 stream cipher for encrypting and decrypting messages.
-* Character Device Interface: Provides a character device (/dev/cipher) for writing messages and keys, and reading encrypted messages.
-* Proc File Interface: Exposes encrypted messages and key management through /proc/cipher and /proc/cipher_key.
-* Kernel Logging: Logs key events (e.g., device open/close, message encryption/decryption) using pr_info.
+✔ RC4 stream cipher implementation                                      
+✔ Dual interface: /dev/cipher + /proc/cipher                                 
+✔ Real-time kernel logging via pr_info                                 
+✔ Secure key handling in kernel space                                                      
 
-## Prerequisites
-* Linux Kernel Development Environment: Ensure you have the kernel headers and development tools installed.
-* Root Privileges: Required to load and unload kernel modules.
-* GCC: To compile the kernel module.
+## 🛠️ PREREQUISITES
+$ sudo apt install linux-headers-$(uname -r) gcc make                             
 
-## Usage
-### Compilation
-1. Compile the module:
-```
-make
-```
-### Loading the Module
-1. Load the module:
-```
-sudo insmod cipher_module.ko
-```
-2. Verify that the module is loaded:
-```
-dmesg | tail
-```
-  * You should see messages like:
-    ```
-    Initializing cipher module
-    Allocated major number: 123
-    Cipher module loaded with major 123
-    ```
-3. Check the /dev and /proc files:
-```
-ls /dev/cipher*
-ls /proc/cipher*
-```
-  * You should see:
-      ```
-      /dev/cipher  /dev/cipher_key
-      /proc/cipher  /proc/cipher_key
-      ```
+## ⚡ QUICK START
+1. Compile and load module                       
+$ make                        
+$ sudo insmod cipher_module.ko                                                       
 
-### Using the Cipher Device
-1. Write a Key:
-```
-echo "YOUR_SECRET_KEY" > /dev/cipher_key
-```
-2. Write a Message:
-```
-echo "YOUR_SECRET_MESSAGE" > /dev/cipher
-```
-3. Read the Encrypted Message:
-```
-sudo cat /dev/cipher
-```
-4. Retrieve the Original Message:
-* Write the key to /proc/cipher_key:
-```
-echo "YOUR_SECRET_KEY" > /proc/cipher_key
-```
-* Read the decrypted message:
-```
-sudo cat /proc/cipher
-```
-### Unloading the Module
-1. Unload the module:
-```
-sudo rmmod cipher_module.ko
-```
-2. Verify that the module is unloaded:
-```
-dmesg | tail
-```
-* You should see:
-```
-Cipher module unloaded
-```
-## Code Overview
-### Key Files
-* cipher_module.c: The main kernel module implementation.
-    * Character Device: Provides /dev/cipher for writing messages and keys, and reading encrypted messages.
-    * Proc Files: Provides /proc/cipher for decrypted messages and /proc/cipher_key for setting the key.
-    * RC4 Integration: Calls the RC4 algorithm for encryption and decryption.
+2. Verify loading                  
+$ dmesg | tail -3                  
+[ 1234.5678] Initializing cipher module                       
+[ 1234.5679] Allocated major number: 123                  
+[ 1234.5680] Cipher module loaded             
 
-* RC4.c: Implements the RC4 encryption algorithm.
-    * rc4(): Encrypts or decrypts a message using the provided key.
-* RC4.h: Header file for the RC4 implementation.
+3. Set key and encrypt                      
+$ echo "SECRET_KEY" > /dev/cipher_key                
+$ echo "Plaintext" > /dev/cipher              
 
-### Key Functions
-* cipher_open(): Logs when the cipher device is opened.
-* cipher_release(): Logs when the cipher device is closed.
-* cipher_write(): Handles writing messages or keys to the device.
-* cipher_read(): Returns the encrypted message or a warning for key access.
-* proc_read_cipher(): Reads and decrypts the message from /proc/cipher.
-* proc_write_cipher_key(): Writes the key to /proc/cipher_key.
-* rc4(): Encrypts or decrypts a message using the RC4 algorithm.
+4. Read encrypted output               
+$ sudo cat /dev/cipher               
+> ��%�jM�               
 
-## Proc Files
-* /proc/cipher: Read the decrypted message.
-* /proc/cipher_key: Write the encryption key.
 
-## Character Device
-* /dev/cipher: Write messages or keys, and read encrypted messages.
+## 📂 FILES & INTERFACES
+/dev/cipher        - Write msgs/keys, read encrypted data                   
+/dev/cipher_key    - Key input (alternate)                   
+/proc/cipher       - Read decrypted messages                 
+/proc/cipher_key   - Key input for decryption                                 
 
-## Example Workflow
-1. Set the Key:
-```
-echo "mysecretkey" > /dev/cipher_key
-```
-2. Encrypt a Message:
-```
-echo "Hello, World!" > /dev/cipher
-```
-3. Read the Encrypted Message:
-```
-sudo cat /dev/cipher
-```
-4. Decrypt the Message:
+💡 EXAMPLE WORKFLOW
+1. Set Key                   
+$ echo "kernel123" > /dev/cipher_key                       
 
-    * Write the key to /proc/cipher_key:
-    ```
-    echo "mysecretkey" > /proc/cipher_key
-    ```
-    * Read the decrypted message:
-    ```
-    sudo cat /proc/cipher
-    ```
+2. Encrypt                
+$ echo "SecurityRocks" > /dev/cipher                
+ 
+3. Read Ciphertext                   
+$ cat /dev/cipher                       
+> �x$�q�Z�             
+
+4. Decrypt                   
+$ echo "kernel123" > /proc/cipher_key                    
+$ cat /proc/cipher                        
+> SecurityRocks                              
+
+## ⚠️ SECURITY NOTES
+🔒 Keys remain in kernel memory until module unload
+📝 Prefer /proc interface for sensitive operations
+🚫 RC4 has known vulnerabilities - not for production
